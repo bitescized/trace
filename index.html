@@ -1,0 +1,621 @@
+import React, { useState, useMemo } from "react";
+
+const TraceMineralVisualizer = () => {
+  const [scale, setScale] = useState(200);
+  const [selectedElement, setSelectedElement] = useState(null);
+  const [showLabels, setShowLabels] = useState(true);
+  const [saltType, setSaltType] = useState("redmond");
+  const [showScientificInfo, setShowScientificInfo] = useState(false);
+  const [compareMode, setCompareMode] = useState(false);
+  const [saltType2, setSaltType2] = useState("table");
+
+  // Redmond Salt (natural sea salt with trace minerals)
+  const redmondElements = [
+    {
+      name: "Chloride",
+      symbol: "Cl",
+      percentage: 61.0,
+      color: "rgba(156, 163, 175, 0.4)",
+    },
+    {
+      name: "Sodium",
+      symbol: "Na",
+      percentage: 38.0,
+      color: "rgba(209, 213, 219, 0.4)",
+    },
+    { name: "Calcium", symbol: "Ca", percentage: 0.5, color: "#ef4444" },
+    { name: "Sulfur", symbol: "S", percentage: 0.2, color: "#a855f7" },
+    { name: "Magnesium", symbol: "Mg", percentage: 0.12, color: "#06b6d4" },
+    { name: "Potassium", symbol: "K", percentage: 0.1, color: "#10b981" },
+    { name: "Aluminum", symbol: "Al", percentage: 0.05, color: "#f59e0b" },
+    { name: "Bromine", symbol: "Br", percentage: 0.05, color: "#8b5cf6" },
+    { name: "Carbon", symbol: "C", percentage: 0.05, color: "#6366f1" },
+    { name: "Silicon", symbol: "Si", percentage: 0.05, color: "#ec4899" },
+    { name: "Iron", symbol: "Fe", percentage: 0.03, color: "#dc2626" },
+    { name: "Barium", symbol: "Ba", percentage: 0.005, color: "#059669" },
+    { name: "Strontium", symbol: "Sr", percentage: 0.003, color: "#0284c7" },
+    { name: "Iodine", symbol: "I", percentage: 0.003, color: "#7c3aed" },
+    { name: "Phosphorous", symbol: "P", percentage: 0.003, color: "#db2777" },
+    { name: "Manganese", symbol: "Mn", percentage: 0.002, color: "#ea580c" },
+    { name: "Fluoride", symbol: "F", percentage: 0.002, color: "#16a34a" },
+  ];
+
+  // Iodized Table Salt (processed with minimal trace minerals)
+  const tableSaltElements = [
+    {
+      name: "Chloride",
+      symbol: "Cl",
+      percentage: 57.17,
+      color: "rgba(156, 163, 175, 0.4)",
+    },
+    {
+      name: "Sodium",
+      symbol: "Na", 
+      percentage: 42.76,
+      color: "rgba(209, 213, 219, 0.4)",
+    },
+    { name: "Calcium", symbol: "Ca", percentage: 0.039, color: "#ef4444" },
+    { name: "Potassium", symbol: "K", percentage: 0.015, color: "#10b981" },
+    { name: "Magnesium", symbol: "Mg", percentage: 0.0084, color: "#06b6d4" },
+    { name: "Copper", symbol: "Cu", percentage: 0.000008, color: "#f97316" },
+    { name: "Molybdenum", symbol: "Mo", percentage: 0.000004, color: "#8b5cf6" },
+  ];
+
+  // Pink Himalayan Salt (mineral-rich rock salt)
+  const himalayanElements = [
+    {
+      name: "Chloride",
+      symbol: "Cl",
+      percentage: 60.4,
+      color: "rgba(156, 163, 175, 0.4)",
+    },
+    {
+      name: "Sodium",
+      symbol: "Na",
+      percentage: 39.1,
+      color: "rgba(209, 213, 219, 0.4)",
+    },
+    { name: "Sulfur", symbol: "S", percentage: 0.73, color: "#a855f7" },
+    { name: "Calcium", symbol: "Ca", percentage: 0.267, color: "#ef4444" },
+    { name: "Magnesium", symbol: "Mg", percentage: 0.263, color: "#06b6d4" },
+    { name: "Potassium", symbol: "K", percentage: 0.238, color: "#10b981" },
+    { name: "Silicon", symbol: "Si", percentage: 0.013, color: "#ec4899" },
+    { name: "Aluminum", symbol: "Al", percentage: 0.0076, color: "#f59e0b" },
+    { name: "Iron", symbol: "Fe", percentage: 0.0063, color: "#dc2626", special: "Gives pink color!" },
+    { name: "Barium", symbol: "Ba", percentage: 0.005, color: "#059669" },
+    { name: "Cobalt", symbol: "Co", percentage: 0.005, color: "#3b82f6" },
+    { name: "Nickel", symbol: "Ni", percentage: 0.005, color: "#6366f1" },
+    { name: "Manganese", symbol: "Mn", percentage: 0.000214, color: "#ea580c" },
+    { name: "Phosphorus", symbol: "P", percentage: 0.000129, color: "#db2777" },
+    { name: "Lead", symbol: "Pb", percentage: 0.000013, color: "#374151" },
+    { name: "Copper", symbol: "Cu", percentage: 0.000011, color: "#f97316" },
+    { name: "Zinc", symbol: "Zn", percentage: 0.000006, color: "#eab308" },
+    { name: "Chromium", symbol: "Cr", percentage: 0.0000017, color: "#64748b" },
+    { name: "Vanadium", symbol: "V", percentage: 0.0000003, color: "#7c3aed" },
+    { name: "Cadmium", symbol: "Cd", percentage: 0.0000003, color: "#991b1b" },
+    { name: "Mercury", symbol: "Hg", percentage: 0.0000003, color: "#6b7280" },
+    { name: "Selenium", symbol: "Se", percentage: 0.00000028, color: "#7c2d12" },
+    { name: "Molybdenum", symbol: "Mo", percentage: 0.00000017, color: "#8b5cf6" },
+    { name: "Boron", symbol: "B", percentage: 0.000036, color: "#16a34a" },
+  ];
+
+  // Purified Sea Salt (Cargill) - industrial processing with selective minerals
+  const cargillElements = [
+    {
+      name: "Chloride",
+      symbol: "Cl", 
+      percentage: 60.514,
+      color: "rgba(156, 163, 175, 0.4)",
+    },
+    {
+      name: "Sodium",
+      symbol: "Na",
+      percentage: 38.865,
+      color: "rgba(209, 213, 219, 0.4)",
+    },
+    { name: "Calcium", symbol: "Ca", percentage: 0.615, color: "#ef4444" },
+    { name: "Magnesium", symbol: "Mg", percentage: 0.005, color: "#06b6d4" },
+    { name: "Iron", symbol: "Fe", percentage: 0.0007, color: "#dc2626" },
+  ];
+
+  // Nu Salt (Salt Substitute) - potassium chloride instead of sodium chloride
+  const nuSaltElements = [
+    {
+      name: "Potassium",
+      symbol: "K",
+      percentage: 53.0,
+      color: "rgba(16, 185, 129, 0.6)",
+    },
+    {
+      name: "Chloride",
+      symbol: "Cl", 
+      percentage: 47.0,
+      color: "rgba(156, 163, 175, 0.4)",
+    },
+  ];
+
+  // Select current elements based on salt type
+  const getElementsForSaltType = (type) => {
+    return type === "redmond" ? redmondElements : 
+           type === "table" ? tableSaltElements : 
+           type === "cargill" ? cargillElements :
+           type === "nusalt" ? nuSaltElements :
+           himalayanElements;
+  };
+
+  const elements = getElementsForSaltType(saltType);
+  const elements2 = compareMode ? getElementsForSaltType(saltType2) : null;
+
+  // Calculate atom counts based on scale
+  const getAtomCounts = (elementList) => {
+    return elementList
+      .map((element) => ({
+        ...element,
+        count: Math.round((element.percentage / 100) * scale),
+      }))
+      .filter((element) => element.count > 0);
+  };
+
+  const atomCounts = useMemo(() => getAtomCounts(elements), [elements, scale]);
+  const atomCounts2 = useMemo(() => 
+    compareMode ? getAtomCounts(elements2) : null, 
+    [elements2, scale, compareMode]
+  );
+
+  // Generate atom positions in a grid
+  const generateAtoms = (atomCountList) => {
+    const allAtoms = [];
+    let atomId = 0;
+
+    atomCountList.forEach((element) => {
+      for (let i = 0; i < element.count; i++) {
+        allAtoms.push({
+          id: atomId++,
+          element: element.name,
+          symbol: element.symbol,
+          color: element.color,
+        });
+      }
+    });
+
+    // Shuffle atoms for random distribution in grid
+    const shuffled = allAtoms.sort(() => Math.random() - 0.5);
+
+    // Calculate grid dimensions
+    const totalAtoms = shuffled.length;
+    const cols = Math.ceil(Math.sqrt(totalAtoms * 1.2));
+    const rows = Math.ceil(totalAtoms / cols);
+
+    // Assign grid positions
+    return shuffled.map((atom, index) => ({
+      ...atom,
+      gridX: index % cols,
+      gridY: Math.floor(index / cols),
+      cols,
+      rows,
+    }));
+  };
+
+  const atoms = useMemo(() => generateAtoms(atomCounts), [atomCounts]);
+  const atoms2 = useMemo(() => 
+    compareMode ? generateAtoms(atomCounts2) : null, 
+    [atomCounts2, compareMode]
+  );
+
+  const totalAtoms = atoms.length;
+
+  return (
+    <div className="p-6 max-w-6xl mx-auto bg-gray-50 min-h-screen">
+      <div className="bg-white rounded-lg shadow-lg p-6">
+        <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          Salt Composition Visualizer
+        </h1>
+        <p className="text-gray-600 mb-6">
+          Compare the mineral content across five different salts: natural Redmond salt, Pink Himalayan salt (the iron gives it the pink color!), purified sea salt (Cargill), Nu Salt (potassium-based salt substitute), and processed iodized table salt. Each dot represents one atom! Notice how processing affects mineral diversity.
+        </p>
+
+        {/* Controls */}
+        <div className="bg-gray-100 rounded-lg p-4 mb-6">
+          <div className="flex flex-wrap gap-4 items-center">
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="compareMode"
+                checked={compareMode}
+                onChange={(e) => setCompareMode(e.target.checked)}
+                className="rounded"
+              />
+              <label
+                htmlFor="compareMode"
+                className="text-sm font-medium text-gray-700"
+              >
+                Compare Mode
+              </label>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="scientific"
+                checked={showScientificInfo}
+                onChange={(e) => setShowScientificInfo(e.target.checked)}
+                className="rounded"
+              />
+              <label
+                htmlFor="scientific"
+                className="text-sm font-medium text-gray-700"
+              >
+                Show ultra-trace minerals
+              </label>
+            </div>
+
+            {!compareMode ? (
+              <div className="flex items-center gap-2">
+                <label
+                  htmlFor="saltType"
+                  className="text-sm font-medium text-gray-700"
+                >
+                  Salt Type:
+                </label>
+                <select
+                  id="saltType"
+                  value={saltType}
+                  onChange={(e) => setSaltType(e.target.value)}
+                  className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                >
+                  <option value="redmond">Redmond Salt (Natural)</option>
+                  <option value="himalayan">Pink Himalayan Salt</option>
+                  <option value="cargill">Purified Sea Salt (Cargill)</option>
+                  <option value="nusalt">Nu Salt (Salt Substitute)</option>
+                  <option value="table">Iodized Table Salt</option>
+                </select>
+              </div>
+            ) : (
+              <>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="saltType1"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Salt 1:
+                  </label>
+                  <select
+                    id="saltType1"
+                    value={saltType}
+                    onChange={(e) => setSaltType(e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                  >
+                    <option value="redmond">Redmond Salt</option>
+                    <option value="himalayan">Pink Himalayan</option>
+                    <option value="cargill">Cargill Sea Salt</option>
+                    <option value="nusalt">Nu Salt</option>
+                    <option value="table">Table Salt</option>
+                  </select>
+                </div>
+                <div className="flex items-center gap-2">
+                  <label
+                    htmlFor="saltType2"
+                    className="text-sm font-medium text-gray-700"
+                  >
+                    Salt 2:
+                  </label>
+                  <select
+                    id="saltType2"
+                    value={saltType2}
+                    onChange={(e) => setSaltType2(e.target.value)}
+                    className="px-3 py-1 border border-gray-300 rounded-md text-sm"
+                  >
+                    <option value="redmond">Redmond Salt</option>
+                    <option value="himalayan">Pink Himalayan</option>
+                    <option value="cargill">Cargill Sea Salt</option>
+                    <option value="nusalt">Nu Salt</option>
+                    <option value="table">Table Salt</option>
+                  </select>
+                </div>
+              </>
+            )}
+            
+            <div className="flex items-center gap-2">
+              <label
+                htmlFor="scale"
+                className="text-sm font-medium text-gray-700"
+              >
+                Total Atoms:
+              </label>
+              <input
+                id="scale"
+                type="range"
+                min="50"
+                max={showScientificInfo ? "15000" : "1000"}
+                value={scale}
+                onChange={(e) => setScale(parseInt(e.target.value))}
+                className="w-32"
+              />
+              <span className="text-sm text-gray-600 w-16">{scale.toLocaleString()}</span>
+              {showScientificInfo && (
+                <span className="text-xs text-blue-600">(Scientific Range)</span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="checkbox"
+                id="labels"
+                checked={showLabels}
+                onChange={(e) => setShowLabels(e.target.checked)}
+                className="rounded"
+              />
+              <label
+                htmlFor="labels"
+                className="text-sm font-medium text-gray-700"
+              >
+                Show Labels
+              </label>
+            </div>
+          </div>
+        </div>
+
+        {/* Stats */}
+        {!compareMode ? (
+          <div className="bg-gray-900 rounded-lg p-4 mb-6">
+            <h3 className="text-white text-lg font-semibold mb-4">
+              {saltType === "redmond" ? "Redmond Salt" : 
+               saltType === "himalayan" ? "Pink Himalayan Salt" :
+               saltType === "cargill" ? "Purified Sea Salt (Cargill)" :
+               saltType === "nusalt" ? "Nu Salt (Salt Substitute)" :
+               "Iodized Table Salt"} - Element Composition
+            </h3>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              {atomCounts.map((element) => {
+                const keyColor = element.name === "Sodium" ? "rgba(209, 213, 219, 0.8)" : 
+                               element.name === "Chloride" ? "rgba(156, 163, 175, 0.8)" : 
+                               element.name === "Potassium" && saltType === "nusalt" ? "rgba(16, 185, 129, 0.8)" :
+                               element.color;
+                
+                return (
+                  <div
+                    key={element.name}
+                    className={`p-3 rounded-lg border-2 cursor-pointer transition-all ${
+                      selectedElement === element.name
+                        ? "border-blue-400 bg-blue-900 bg-opacity-50"
+                        : "border-gray-600 hover:border-gray-500 bg-gray-800"
+                    }`}
+                    onClick={() =>
+                      setSelectedElement(
+                        selectedElement === element.name ? null : element.name
+                      )
+                    }
+                  >
+                    <div className="flex items-center gap-2 mb-1">
+                      <div
+                        className="w-5 h-5 rounded-full border border-gray-400"
+                        style={{ backgroundColor: keyColor }}
+                      ></div>
+                      <span className="font-medium text-white">
+                        {element.name} ({element.symbol})
+                      </span>
+                    </div>
+                    <div className="text-sm text-gray-300">
+                      <div>
+                        {element.percentage}% = {element.count} atoms
+                      </div>
+                      {element.special && (
+                        <div className="text-xs text-yellow-300 font-medium mt-1">
+                          {element.special}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            {[
+              { type: saltType, counts: atomCounts, atoms: atoms, label: "Salt 1" },
+              { type: saltType2, counts: atomCounts2, atoms: atoms2, label: "Salt 2" }
+            ].map(({ type, counts, atoms, label }) => (
+              <div key={type} className="bg-gray-900 rounded-lg p-4">
+                <h3 className="text-white text-lg font-semibold mb-4">
+                  {label}: {type === "redmond" ? "Redmond Salt" : 
+                           type === "himalayan" ? "Pink Himalayan Salt" :
+                           type === "cargill" ? "Purified Sea Salt (Cargill)" :
+                           type === "nusalt" ? "Nu Salt (Salt Substitute)" :
+                           "Iodized Table Salt"}
+                </h3>
+                <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                  {counts.map((element) => {
+                    const keyColor = element.name === "Sodium" ? "rgba(209, 213, 219, 0.8)" : 
+                                   element.name === "Chloride" ? "rgba(156, 163, 175, 0.8)" : 
+                                   element.name === "Potassium" && type === "nusalt" ? "rgba(16, 185, 129, 0.8)" :
+                                   element.color;
+                    
+                    return (
+                      <div
+                        key={element.name}
+                        className="p-2 rounded-lg border border-gray-600 bg-gray-800"
+                      >
+                        <div className="flex items-center gap-2 mb-1">
+                          <div
+                            className="w-4 h-4 rounded-full border border-gray-400"
+                            style={{ backgroundColor: keyColor }}
+                          ></div>
+                          <span className="font-medium text-white text-sm">
+                            {element.name} ({element.symbol})
+                          </span>
+                        </div>
+                        <div className="text-xs text-gray-300">
+                          {element.percentage}% = {element.count} atoms
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Visualization Container */}
+        <div className="relative">
+          {!compareMode ? (
+            <>
+              <div className="mb-3">
+                <div className="text-lg font-semibold text-gray-800">
+                  Total: {totalAtoms} atoms
+                </div>
+                {selectedElement && (
+                  <div className="text-sm text-gray-600 mt-1">
+                    Highlighting: {selectedElement}
+                  </div>
+                )}
+              </div>
+              <div
+                className="bg-gray-900 rounded-lg p-6 relative overflow-auto"
+                style={{ minHeight: "500px" }}
+              >
+                {atoms.length > 0 && (
+                  <div
+                    className="grid gap-1 mx-auto"
+                    style={{
+                      gridTemplateColumns: `repeat(${atoms[0].cols}, 1fr)`,
+                      width: "fit-content",
+                    }}
+                  >
+                    {atoms.map((atom) => {
+                      const isHighlighted =
+                        selectedElement === null ||
+                        selectedElement === atom.element;
+                      const isSelected = selectedElement === atom.element;
+                      return (
+                        <div
+                          key={atom.id}
+                          className={`w-4 h-4 rounded-full transition-all duration-300 relative group ${
+                            isHighlighted
+                              ? "opacity-100 scale-100"
+                              : "opacity-20 scale-75"
+                          } ${
+                            isSelected
+                              ? "ring-4 ring-yellow-400 ring-opacity-80"
+                              : ""
+                          }`}
+                          style={{
+                            backgroundColor: atom.color,
+                          }}
+                          title={`${atom.element} (${atom.symbol})`}
+                        >
+                          {isSelected && (
+                            <div className="absolute -inset-1 rounded-full border-2 border-yellow-400 animate-pulse"></div>
+                          )}
+                          {showLabels && (
+                            <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-white bg-black bg-opacity-75 px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                              {atom.symbol}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="mb-3 text-center">
+                <div className="text-lg font-semibold text-gray-800">
+                  Side-by-Side Comparison
+                </div>
+                <div className="text-sm text-gray-600">
+                  {atoms.length} atoms vs {atoms2?.length || 0} atoms
+                </div>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                {[
+                  { atoms: atoms, type: saltType, label: "Salt 1" },
+                  { atoms: atoms2, type: saltType2, label: "Salt 2" }
+                ].map(({ atoms: atomList, type, label }) => (
+                  <div key={type} className="bg-gray-900 rounded-lg p-4 w-full sm:w-auto sm:flex-1 sm:max-w-sm">
+                    <h4 className="text-white font-semibold mb-3 text-center">
+                      {label}: {type === "redmond" ? "Redmond" : 
+                               type === "himalayan" ? "Himalayan" :
+                               type === "cargill" ? "Cargill" :
+                               type === "nusalt" ? "Nu Salt" :
+                               "Table Salt"}
+                    </h4>
+                    <div className="bg-gray-800 rounded p-3 overflow-auto flex justify-center" style={{ minHeight: "300px" }}>
+                      {atomList && atomList.length > 0 && (
+                        <div
+                          className="grid gap-1"
+                          style={{
+                            gridTemplateColumns: `repeat(${Math.min(atomList[0].cols, 16)}, 1fr)`,
+                          }}
+                        >
+                          {atomList.map((atom) => (
+                            <div
+                              key={atom.id}
+                              className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full transition-all duration-300 relative group"
+                              style={{
+                                backgroundColor: atom.color,
+                              }}
+                              title={`${atom.element} (${atom.symbol})`}
+                            >
+                              {showLabels && (
+                                <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-xs text-white bg-black bg-opacity-75 px-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-10">
+                                  {atom.symbol}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+
+        {/* Ultra-Trace Minerals Panel */}
+        {showScientificInfo && !compareMode && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+            <h3 className="text-lg font-semibold text-blue-900 mb-3">
+              Ultra-Trace Minerals
+            </h3>
+            <p className="text-blue-800 text-sm mb-3">
+              There are other trace minerals, but these are in really small amounts. This shows how many total atoms you'd need to see even <strong>one dot</strong> of each trace mineral:
+            </p>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+              {elements
+                .filter(el => el.name !== "Sodium" && el.name !== "Chloride")
+                .map((element) => {
+                  const atomsNeeded = Math.ceil(100 / element.percentage);
+                  const isVisible = atomsNeeded <= scale;
+                  return (
+                    <div
+                      key={element.name}
+                      className="p-2 rounded border text-sm bg-gray-900 border-gray-700 text-white"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: element.color }}
+                        ></div>
+                        <span className="font-medium">{element.name}</span>
+                      </div>
+                      <div className="text-xs mt-1 text-gray-300">
+                        Needs: {atomsNeeded.toLocaleString()} atoms
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default TraceMineralVisualizer;
